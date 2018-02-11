@@ -291,3 +291,23 @@ int ads1115Setup (const int pinBase, int i2cAddr)
 
   return TRUE ;
 }
+
+int ads1115SetupManual(const int pinBase, int i2cAddr)
+{
+	struct wiringPiNodeStruct *node;
+	int fd;
+
+	if ((fd = wiringPiI2CSetup(i2cAddr)) < 0)
+		return FALSE;
+
+	node = wiringPiNewNode(pinBase, 8);
+
+	node->fd = fd;
+	node->data0 = CONFIG_PGA_2_048V;	// Gain in data0
+	node->data1 = CONFIG_DR_860SPS;	// Samples/sec in data1
+	node->analogRead = myAnalogRead;
+	node->analogWrite = myAnalogWrite;
+	node->digitalWrite = myDigitalWrite;
+
+	return TRUE;
+}

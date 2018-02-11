@@ -11,8 +11,7 @@
 
 /*
 //used on linux
-#include <wiringPi.h> //Wiring Pi Library
-#include <ads1115.h> // Library for the ADS1115 ADC
+#include "wiringPi.h> //Wiring Pi Library
 #include <wiringPiSPI.h>
 #include <stdio.h>
 
