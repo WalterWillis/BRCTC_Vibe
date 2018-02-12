@@ -6,6 +6,7 @@ using namespace std;
 const int A0 = 100; 
 const int A1 = 101; 
 const int A2 = 102; 
+const int length = 30000;
 
 
 
@@ -26,20 +27,6 @@ void WriteHeader(string file)
 	}
 }
 
-void WriteToFile(string file, double *value) {
-	ofstream myfile;
-	myfile.open(file, ios::out | ios::app);
-
-	if (myfile.is_open())
-	{
-		time_t timeNow = time(0);
-		char* systime = ctime(&timeNow);
-		myfile << *value << ";" << *(value + 1) << ";" << *(value + 2) << ";" << systime << endl;
-		myfile.flush();
-		myfile.close();
-	}
-}
-
 void *PiezoDataCollector(void *unused)
 {
 	wiringPiSetup();
@@ -49,22 +36,40 @@ void *PiezoDataCollector(void *unused)
 	pinMode(A1, INPUT);
 	pinMode(A2, INPUT);
 
-	time_t timeNow = time(0);
-	time_t timeCut = time(0);
+	time_t timeNow = time(0); // updates after every succesful loop
+	time_t timeCut = time(0); // always stays as time that program started
 
-	while (timeNow - timeCut < 1800)
+	while (timeNow - timeCut < 1800) //1800 seconds = 30 min
 	{
-		double inputValue[3];
-		inputValue[0] = analogRead(A0);
-		inputValue[0] *= (2.048 / 32768);		
+		double inputValue[length][3];
+		time_t timeData[length];
 
-		inputValue[1] = analogRead(A1);
-		inputValue[1] *= (2.048 / 32768);
+		for (int i = 0; i < length; i++) {
+			
+			inputValue[i][0] = analogRead(A0);
+			inputValue[i][0] *= (2.048 / 32768);
 
-		inputValue[2] = analogRead(A2); 
-		inputValue[2] *= (2.048 / 32768);
+			inputValue[i][1] = analogRead(A1);
+			inputValue[i][1] *= (2.048 / 32768);
 
-		WriteToFile(fileName, inputValue);
+			inputValue[i][2] = analogRead(A2);
+			inputValue[i][2] *= (2.048 / 32768);
+
+			timeData[i] = time(0) - timeCut; // get time in seconds since beginning of program
+		}
+
+		ofstream myfile;
+		myfile.open(fileName, ios::out | ios::app);
+
+		for (int i = 0; i < length; i++) {
+			if (myfile.is_open())
+			{
+				myfile << inputValue[i][0] << ";" << inputValue[i][1] << ";" << inputValue[i][2] << ";" << timeData[i] << endl;
+			}
+		}
+
+		myfile.flush();
+		myfile.close();
 
 		timeNow = time(0);
 	}
