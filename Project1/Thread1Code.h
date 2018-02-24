@@ -3,6 +3,6 @@
 #ifndef THREAD1CODE_H
 #define THREAD1CODE_H
 
-void *GyroDataCollector(void*);
+void *SpiDataCollector(void*);
 
 #endif

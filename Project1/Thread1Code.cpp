@@ -2,7 +2,7 @@
 
 using namespace std;
 
-void *GyroDataCollector(void*);
+void *SpiDataCollector(void*);
 
 void GyroHeader(string file)
 {
@@ -20,19 +20,45 @@ void GyroHeader(string file)
 	}
 }
 
-void *GyroDataCollector(void *unused) { //import time now and start + 30
+void PiHatHeader(string file)
+{
+	ofstream AdcFile;
+	AdcFile.open(file, ios::out | ios::app); //output and append
+
+	string header = "Supply Voltage;Pizeo X;Pizeo Y;Pizeo Z;Time";
+
+	if (AdcFile.is_open())
+	{
+		AdcFile << header << endl;
+		//cout << header << endl;
+		AdcFile.flush();
+		AdcFile.close();
+	}
+}
+
+void *SpiDataCollector(void *unused) { //import time now and start + 30
 	time_t timeNow = time(0);
 	time_t timeCut = time(0);
-	char* systime = ctime(&timeNow);
-	string gyro_time = systime;
-	ADIS16460 Gyro;
-	Gyro.ClearBuffer();
-	GyroHeader(Gyro.fileName);	// file name is in the .h file
+	string SPI_TIME = ctime(&timeNow);
+
+	const int length = 30000;
+	const int ADC_Pins = 3;
+
+	PiHat ADC;
+	PiHatHeader(ADC.fileName);
+	//ADIS16460 Gyro;
+	//Gyro.ClearBuffer();
+	//GyroHeader(Gyro.fileName);	// file name is in the .h file
 
 	while (timeNow - timeCut < 1800) { // Switch to if time now >= start + 30
+
+		int result;
+		double realResults[length][ADC_Pins];
+		time_t timeData[length];
+		/*							   
 		Gyro.GetADISReadings();
 		delayMicroseconds(100); // More than enough time for SPI communication. Less could drop performance: http://wiringpi.com/reference/timing/
-
+		
 		ofstream gyroFile;
 		gyroFile.open(Gyro.fileName, ios::out | ios::app); //output and append
 
@@ -60,6 +86,31 @@ void *GyroDataCollector(void *unused) { //import time now and start + 30
 
 		Gyro.ClearBuffer();
 		delayMicroseconds(100);
+		*/
+
+		for (int i = 0; i < length; i++)
+		{
+			for (int pin = 0; pin < ADC_Pins; pin++)
+			{
+				result = ADC.readADCChannel(pin);
+				realResults[i][pin] = (double)result / (double)4095 * ADC.vref;
+			}
+			timeData[i] = time(0) - timeCut; // get time in seconds since beginning of program
+		}
+
+		ofstream myfile;
+		myfile.open("ADC_TEST.txt", ios::out | ios::app);
+
+		for (int i = 0; i < length; i++) {
+			if (myfile.is_open())
+			{
+				myfile << ADC.vref << ";" << realResults[i][0] << ";" << realResults[i][1] << ";" << realResults[i][2] << ";" << timeData[i] << endl;
+			}
+		}
+
+		myfile.flush();
+		myfile.close();
+
 	}
 	pthread_exit(NULL);
 }

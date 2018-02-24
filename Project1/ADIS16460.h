@@ -77,10 +77,9 @@ class ADIS16460
 {
 	private:
 		//WiringPi Pin Scheme
-		//int CS = 10; 
-		int channel = 0; // CE0 on WiringPi
-		int mode = 3; // SPI Mode
-		int speed = 1000000; // frequency of signal
+		int _channel = 1; // CE0 on WiringPi
+		int _mode = 3; // SPI Mode
+		int _speed = 1000000; // frequency of signal
 
 		int16_t RegRead(uint8_t regAddr);
 		int RegWrite(uint8_t regAddr, int16_t regData);
@@ -90,7 +89,8 @@ class ADIS16460
 		//CHECKSUM is the sum off all the preceeding values in unsigned 8 bit number format.		
 		const string fileName = "ADIS16460.txt";
 
-		ADIS16460();		
+		ADIS16460();	
+		ADIS16460(int channel, int speed, int mode);
 		//unsigned int readreg(unsigned char nbits, unsigned char reg);
 		void ClearBuffer(void);
 		double twoscomptransform(unsigned char nbits, unsigned int num);
