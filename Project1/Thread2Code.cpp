@@ -41,6 +41,13 @@ void *PiezoDataCollector(void *unused)
 
 	while (timeNow - timeCut < 1800) //1800 seconds = 30 min
 	{
+
+		/*
+		TODO
+		Instead of writing down tons of data, get the min, max and average of the data over a period of time and see how that looks.
+		
+		
+		*/
 		double inputValue[length][3];
 		time_t timeData[length];
 

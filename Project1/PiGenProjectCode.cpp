@@ -9,12 +9,12 @@
 using namespace std;
 
 //// Globals
-// Ints 
-const int adc0Input = 100; 
+////ADS1115
+//const int adc0Input = 100; 
+//char devID0 = 0x48; // GND to ADDR (ADC)
 
 // Strings
 string MFile = "Master_Program_Data.txt";
-char devID0 = 0x48; // GND to ADDR (ADC)
 
 // Data Stream
 ofstream data_;
@@ -46,7 +46,8 @@ int Startup() {
 		systime = ctime(&timeNow);
 		data_ << "\tWiring Pi Setup Complete..." << systime << endl;
 
-		////Setup Piezo
+/*
+		////Setup I2C ADC Device
 		timeNow = time(0);
 		systime = ctime(&timeNow);
 		data_ << "\tADS1115 (ADC) Setup Started..." << systime << endl;
@@ -55,20 +56,20 @@ int Startup() {
 		timeNow = time(0);
 		systime = ctime(&timeNow);
 		data_ << "\tADS1115 (ADC) Setup Complete..." << systime << endl;
+*/
 
+		////Setup SPI Devices
+		timeNow = time(0);
+		systime = ctime(&timeNow);
+		data_ << "\tGyro Setup Started..." << systime << endl;
+		pthread_create(&threads[1], NULL, SpiDataCollector, NULL);
+		timeNow = time(0);
+		systime = ctime(&timeNow);
+		data_ << "\tSPI Setup Complete..." << systime << endl;
 
-		//////Setup Gyro
-		//timeNow = time(0);
-		//systime = ctime(&timeNow);
-		//data_ << "\tGyro Setup Started..." << systime << endl;
-		//pthread_create(&threads[1], NULL, GyroDataCollector, NULL);
-		//timeNow = time(0);
-		//systime = ctime(&timeNow);
-		//data_ << "\tGyro Setup Complete..." << systime << endl;
-
-		//timeNow = time(0);
-		//systime = ctime(&timeNow);
-		//data_ << "System Device Setup Complete..." << systime << endl;
+		timeNow = time(0);
+		systime = ctime(&timeNow);
+		data_ << "System Device Setup Complete..." << systime << endl;
 
 		data_.flush();
 		data_.close();

@@ -26,7 +26,12 @@ NOTES: using WiringPi delayMicroseconds() with less than 100 microseconds can ca
 
 ADIS16460::ADIS16460()
 {
-	(wiringPiSPISetupMode (channel, speed, mode) < 0);
+	(wiringPiSPISetupMode (_channel, _speed, _mode) < 0);
+}
+
+ADIS16460::ADIS16460(int channel, int speed, int mode)
+{
+	(wiringPiSPISetupMode(channel, speed, mode) < 0);
 }
 
 void ADIS16460::ClearBuffer(void)

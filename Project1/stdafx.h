@@ -20,5 +20,6 @@
 #include <string> //Int to String Conversion Library
 #include <ctime> //Standard C++ Time Library
 #include "ADIS16460.h"
+#include "PiHat.h"
 
 // TODO: reference additional headers your program requires here
