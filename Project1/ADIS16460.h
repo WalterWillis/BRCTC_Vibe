@@ -85,18 +85,26 @@ class ADIS16460
 		int RegWrite(uint8_t regAddr, int16_t regData);
 		
 	public:
-		int Diagnostic, GyroX, GyroY, GyroZ, AccelX, AccelY, AccelZ, Temp, SampleCounter, Checksum; // Perform GetADISReadings function, and then read from the  data.
+		//int Diagnostic, GyroX, GyroY, GyroZ, AccelX, AccelY, AccelZ, Temp, SampleCounter, Checksum; // Perform GetADISReadings function, and then read from the  data.
 		//CHECKSUM is the sum off all the preceeding values in unsigned 8 bit number format.		
 		const string fileName = "ADIS16460.txt";
 
 		ADIS16460();	
-		ADIS16460(int channel, int speed, int mode);
+		ADIS16460(int channel, int speed, int mode);	
+		int16_t *burstRead(void);
+		int16_t checksum(int16_t * burstArray);
+		float accelScale(int16_t sensorData);
+		float gyroScale(int16_t sensorData);
+		float tempScale(int16_t sensorData);
+		float deltaAngleScale(int16_t sensorData);
+		float deltaVelocityScale(int16_t sensorData);
+		int resetDUT(uint8_t ms);
+
 		//unsigned int readreg(unsigned char nbits, unsigned char reg);
-		void ClearBuffer(void);
+		/*void ClearBuffer(void);
 		double twoscomptransform(unsigned char nbits, unsigned int num);
 		void GetADISReadings(void);
-		unsigned int SetData(unsigned char nbits, unsigned char upper, unsigned char lower);
-		
+		unsigned int SetData(unsigned char nbits, unsigned char upper, unsigned char lower);*/		
 };
 
 #endif
