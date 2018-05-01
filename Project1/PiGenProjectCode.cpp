@@ -2,8 +2,8 @@
 //
 
 #include "stdafx.h"
-//#include "Thread1Code.h" //Code for First thread
-#include "Thread2Code.h" //Code for Second Thread
+#include "Thread1Code.h" //Code for First thread
+//#include "Thread2Code.h" //Code for Second Thread
 #include <stdlib.h> //Library for system functions
 
 using namespace std;
@@ -62,7 +62,7 @@ int Startup() {
 		timeNow = time(0);
 		systime = ctime(&timeNow);
 		data_ << "\tGyro Setup Started..." << systime << endl;
-		pthread_create(&threads[1], NULL, SpiDataCollector, NULL);
+		pthread_create(&threads[0], NULL, SpiDataCollector, NULL);
 		timeNow = time(0);
 		systime = ctime(&timeNow);
 		data_ << "\tSPI Setup Complete..." << systime << endl;
