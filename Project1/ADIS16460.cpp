@@ -56,9 +56,13 @@ ADIS16460::ADIS16460()
 	(wiringPiSPISetupMode (_channel, _speed, _mode) < 0);
 }
 
-ADIS16460::ADIS16460(int channel, int speed, int mode)
+ADIS16460::ADIS16460(int channel, int speed, int mode, int rst)
 {
 	(wiringPiSPISetupMode(channel, speed, mode) < 0);
+	_channel = channel;
+		_speed = speed;
+	_mode = mode;
+	_RST = rst;
 }
 
 ////////////////////////////////////////////////////////////////////////////

@@ -76,23 +76,23 @@ using namespace std;
 class ADIS16460
 {
 	private:
-		//WiringPi Pin Scheme
+		//WiringPi default Pin Scheme
 		int _channel = 1; // CE0 on WiringPi
 		int _mode = 3; // SPI Mode
 		int _speed = 1000000; // frequency of signal
-
-		int16_t RegRead(uint8_t regAddr);
-		int RegWrite(uint8_t regAddr, int16_t regData);
-		
+		int _RST = 3; // Sync/reset pin - not currently used
+	
 	public:
 		//int Diagnostic, GyroX, GyroY, GyroZ, AccelX, AccelY, AccelZ, Temp, SampleCounter, Checksum; // Perform GetADISReadings function, and then read from the  data.
 		//CHECKSUM is the sum off all the preceeding values in unsigned 8 bit number format.		
 		const string fileName = "ADIS16460.txt";
 
 		ADIS16460();	
-		ADIS16460(int channel, int speed, int mode);	
+		ADIS16460(int channel, int speed, int mode, int RST);	
 		int16_t *burstRead(void);
 		int16_t checksum(int16_t * burstArray);
+		int16_t RegRead(uint8_t regAddr);
+		int RegWrite(uint8_t regAddr, int16_t regData);
 		float accelScale(int16_t sensorData);
 		float gyroScale(int16_t sensorData);
 		float tempScale(int16_t sensorData);
