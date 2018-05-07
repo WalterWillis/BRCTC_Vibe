@@ -1,0 +1,10 @@
+Purpose of test: Verify that PiHat code works. Verify that results are as expected.
+
+Result: Success! 
+
+Misc:
+After noticing that the jumper on the PiHat was on 5v, rather than 3.3v, the results were as expected.
+
+Code worked on first attempt! (Other than include changes that were required, and command line syntax mistakes)
+
+Code was run for a few arbitrary seconds.

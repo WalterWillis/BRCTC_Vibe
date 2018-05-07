@@ -9,7 +9,7 @@ void GyroHeader(string file)
 	ofstream gyroFile;
 	gyroFile.open(file, ios::out | ios::app); //output and append
 
-	string header = "Diagnostic; GyroX; GyroY; GyroZ; AccelX; AccelY; AccelZ; Temp; SampleCounter; Checksum"
+	string header = "Diagnostic; GyroX; GyroY; GyroZ; AccelX; AccelY; AccelZ; Temp; SampleCounter; ChecksumRead; ChecksumCalculated"
 	if (gyroFile.is_open())
 	{
 		gyroFile << header << endl;
@@ -42,7 +42,7 @@ void *SpiDataCollector(void *unused) { //import time now and start + 30
 
 	const int length = 30000;
 	const int ADC_Pins = 3;
-	const int Gyro_DataPoints = 10;
+	const int Gyro_DataPoints = 10; 
 
 
 	////ADC SETUP
@@ -71,25 +71,24 @@ void *SpiDataCollector(void *unused) { //import time now and start + 30
 		double realResults[length][ADC_Pins];
 
 		////GYRO
-		double Gyro_Data[length][Gyro_DataPoints];
-		int16_t *burstData;
-		int16_t burstChecksum = 0;
+		int16_t *burstData[length][Gyro_DataPoints];
+		int16_t burstChecksum = 0; // used to verify checksum
 
 		////Time
 		time_t timeData[length];
 		
-		burstData = Gyro.burstRead();
 
 		for (int i = 0; i < length; i++)
 		{
+			timeData[i] = time(0) - timeCut; // get time in seconds since beginning of program
 			for (int pin = 0; pin < ADC_Pins; pin++)
 			{
 				result = ADC.readADCChannel(pin);
 				realResults[i][pin] = (double)result / (double)4095 * ADC.vref;
 			}
-
-
-			timeData[i] = time(0) - timeCut; // get time in seconds since beginning of program
+			
+			burstData[i] = Gyro.burstRead();
+			delayMicroseconds(16); // according to the datasheet, this is the appropriate delay between readings. The ADC read process is a timing blackbox.
 		}
 
 		ofstream myfile;
@@ -108,24 +107,26 @@ void *SpiDataCollector(void *unused) { //import time now and start + 30
 		myfile.open("GYRO_TEST.txt", ios::out | ios::app);
 		if (myfile.is_open())
 		{
-			for (int i = 0; i < Gyro_DataPoints; i++) 
-			{
-				char semi = ';';
-				if (i == 0) // Redundant with else, but 0 will always be the first selection hit. May need to be optimized.
-					myfile << burstData[i] << semi;
-				else if (i > 0 && i <= 3)
-					myfile << Gyro.gyroScale(*(burstData[i])) << semi;
-				else if (i > 3 && i <= 6)
-					myfile << Gyro.accelScale(*(burstData[i])) << semi;
-				else if (i == 7)
-					myfile << Gyro.tempScale*(burstData[i])) << semi;
-				else
-					myfile << burstData[i] << semi;
-			}
-			myfile << timeData[i] << endl;
-			myfile.flush();
-			myfile.close();
+			for (int i = 0; i < length; i++) {
+				for (int j = 0; j < Gyro_DataPoints; j++)
+				{
+					char semi = ';';
+					if (j == 0) // Redundant with else, but 0 will always be the first selection hit. May need to be optimized.
+						myfile << burstData[i][j] << semi;
+					else if (j > 0 && j <= 3)
+						myfile << Gyro.gyroScale(*(burstData[i][j])) << semi;
+					else if (j > 3 && j <= 6)
+						myfile << Gyro.accelScale(*(burstData[i][j])) << semi;
+					else if (j == 7)
+						myfile << Gyro.tempScale*(burstData[i][j])) << semi;
+					else
+						myfile << burstData[i][j] << semi;
+				}
+				myfile << Gyro.checksum(burstData[i]) << timeData[i] << endl;
+			}			
 		}
+		myfile.flush();
+		myfile.close();
 
 	}
 	pthread_exit(NULL);
