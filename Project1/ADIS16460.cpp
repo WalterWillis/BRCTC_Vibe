@@ -44,7 +44,7 @@ NOTES: using WiringPi delayMicroseconds() with less than 100 microseconds can ca
 
 #include "stdafx.h"
 //#include "wiringPi.h"
-#include "wiringPiSPI.h"
+#include <wiringPiSPI.h>
 #include "ADIS16460.h"
 #include <string.h>
 #include <stdio.h>
@@ -58,19 +58,22 @@ ADIS16460::ADIS16460()
 
 ADIS16460::ADIS16460(int channel, int speed, int mode)
 {
+	_channel = channel;
+	_speed = speed;
+	_mode = mode;
 	(wiringPiSPISetupMode(channel, speed, mode) < 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////
 // Performs a hardware reset by setting _RST pin low for delay (in ms).
 ////////////////////////////////////////////////////////////////////////////
-int ADIS16460::resetDUT(uint8_t ms) {
-	digitalWrite(_RST, LOW);
-	delay(100);
-	digitalWrite(_RST, HIGH);
-	delay(ms);
-	return(1);
-}
+//int ADIS16460::resetDUT(uint8_t ms) {
+//	digitalWrite(_RST, LOW);
+//	delay(100);
+//	digitalWrite(_RST, HIGH);
+//	delay(ms);
+//	return(1);
+//}
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Reads two bytes (one word) in two sequential registers over SPI
@@ -123,17 +126,26 @@ int ADIS16460::RegWrite(uint8_t regAddr, int16_t regData)
 ////////////////////////////////////////////////////////////////////////////
 int16_t *ADIS16460::burstRead(void) {
 
-	const int16_t length = 20;
+	const int16_t length = 22;
 	uint8_t burstdata[length];
+	memcpy(burstdata, burstdataModel, length*sizeof(uint8_t));
 	static int16_t burstwords[length/2];
+
 	// Trigger Burst Read
 	wiringPiSPIDataRW(_channel, burstdata, length);
 
 	// Join bytes into words
-	// My version of data conversion
-	for (int i = 0; i < length; i + 2) {
-		burstwords[i/2] = ((burstdata[i] << 8) | (burstdata[i + 1] & 0xFF)); 
-	}
+	burstwords[0] = ((burstdata[2] << 8) | (burstdata[3] & 0xFF)); 
+	burstwords[1] = ((burstdata[4] << 8) | (burstdata[5] & 0xFF)); 
+	burstwords[2] = ((burstdata[6] << 8) | (burstdata[7] & 0xFF)); 
+	burstwords[3] = ((burstdata[8] << 8) | (burstdata[9] & 0xFF)); 
+	burstwords[4] = ((burstdata[10] << 8) | (burstdata[11] & 0xFF)); 
+	burstwords[5] = ((burstdata[12] << 8) | (burstdata[13] & 0xFF)); 
+	burstwords[6] = ((burstdata[14] << 8) | (burstdata[15] & 0xFF)); 
+	burstwords[7] = ((burstdata[16] << 8) | (burstdata[17] & 0xFF)); 
+	burstwords[8] = ((burstdata[18] << 8) | (burstdata[19] & 0xFF)); 
+	burstwords[9] = ((burstdata[20] << 8) | (burstdata[21] & 0xFF)); 
+	
 	//Data order
 	//DIAG_STAT//XGYRO//YGYRO//ZGYRO//XACCEL//YACCEL//ZACCEL//TEMP_OUT//SMPL_CNTR//CHECKSUM
 	return burstwords;
@@ -153,6 +165,15 @@ int16_t ADIS16460::checksum(int16_t * burstArray) {
 		s += (burstArray[i] & 0xFF); // Count lower byte
 		s += ((burstArray[i] >> 8) & 0xFF); // Count upper byte
 	}
+
+	return s;
+}
+
+int16_t ADIS16460::checksum(int16_t sensorData) {
+	int16_t s = 0;
+
+	s += (sensorData & 0xFF); // Count lower byte
+	s += ((sensorData >> 8) & 0xFF); // Count upper byte
 
 	return s;
 }

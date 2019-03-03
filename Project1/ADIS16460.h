@@ -69,7 +69,7 @@ This code is free to use. Distributed as-is; no warranty is given.
 #define CAL_CRC     0x62  //Calibration memory CRC values
 #define CODE_SGNTR  0x64  //Code memory signature value
 #define CODE_CRC 0x66 //Code memory CRC values
-#define BURST_READ 0x3E00 // Used to read the most common registers with one command
+#define BURST_READ 0x3E // Used to read the most common registers with one command
 
 using namespace std;
 
@@ -80,6 +80,7 @@ class ADIS16460
 		int _channel = 1; // CE0 on WiringPi
 		int _mode = 3; // SPI Mode
 		int _speed = 1000000; // frequency of signal
+		uint8_t burstdataModel[22] = {BURST_READ, FLASH_CNT, FLASH_CNT, FLASH_CNT, FLASH_CNT, FLASH_CNT, FLASH_CNT, FLASH_CNT, FLASH_CNT, FLASH_CNT, FLASH_CNT, FLASH_CNT, FLASH_CNT, FLASH_CNT, FLASH_CNT, FLASH_CNT, FLASH_CNT, FLASH_CNT, FLASH_CNT, FLASH_CNT};
 
 		int16_t RegRead(uint8_t regAddr);
 		int RegWrite(uint8_t regAddr, int16_t regData);
@@ -93,6 +94,7 @@ class ADIS16460
 		ADIS16460(int channel, int speed, int mode);	
 		int16_t *burstRead(void);
 		int16_t checksum(int16_t * burstArray);
+		int16_t checksum(int16_t sensorData);
 		float accelScale(int16_t sensorData);
 		float gyroScale(int16_t sensorData);
 		float tempScale(int16_t sensorData);

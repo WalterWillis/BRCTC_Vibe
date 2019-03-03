@@ -59,7 +59,7 @@ int Startup() {
 */
 
 		////Setup SPI Devices
-		timeNow = time(0);
+		/*timeNow = time(0);
 		systime = ctime(&timeNow);
 		data_ << "\tGyro Setup Started..." << systime << endl;
 		pthread_create(&threads[1], NULL, SpiDataCollector, NULL);
@@ -72,7 +72,7 @@ int Startup() {
 		data_ << "System Device Setup Complete..." << systime << endl;
 
 		data_.flush();
-		data_.close();
+		data_.close();*/
 	}
 	return 0;
 }
@@ -84,23 +84,31 @@ int Startup() {
 
 int main()
 {
-	int rc = Startup();
-	time_t timeNow = time(0);
-	time_t timeCut = time(0);
-	string begin_time;
-	char* systime = ctime(&timeNow);
-	begin_time = systime;
+	ADIS16460 Gyro = ADIS16460(1, 1000000, 3);
+	delay(1);
 
-	if (rc != 0) {
-		system("sudo reboot");
-	}
-	else if (rc == 0)
-	{
-		while (timeNow - timeCut < 1801) //Change to Start Time + 30
-		{
-			timeNow = time(0);
+	while (true) {
+		int16_t* results = Gyro.burstRead();
+		//cout << "\nArray: " << results;
+
+		int16_t checksumExp = Gyro.checksum(results);
+		int16_t checksumReal = Gyro.checksum(results[9]);
+
+		//cout << "\nChecksum Expected: " << checksumExp << "\nChecksum Reality: " << results[9] << "\nIs match: " << (results[9] == checksumExp);
+
+		if(true){//checksumExp == results[9]){
+			cout << "\nGyro X: " << Gyro.gyroScale(results[1]);
+			cout << "\nGyro Y: " << Gyro.gyroScale(results[2]);
+			cout << "\nGyro Z: " << Gyro.gyroScale(results[3]);
+
+			cout << "\nAccel X: " << Gyro.accelScale(results[4]);
+			cout << "\nAccel Y: " << Gyro.accelScale(results[5]);
+			cout << "\nAccel Z: " << Gyro.accelScale(results[6]);
+
+			cout << "\nTemp: " << Gyro.tempScale(results[7]);
+
+			cout << "\nSample Rate: " << Gyro.tempScale(results[8]);
 		}
-		system("sudo shutdown now");
-		return 0;
+		delay(20);
 	}
 }

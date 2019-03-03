@@ -8,7 +8,7 @@
 #define _CRT_SECURE_NO_WARNINGS 0
 
 //#include "targetver.h"
-#include "wiringPi.h" //Wiring Pi Library
+#include <wiringPi.h> //Wiring Pi Library
 #include "ads1115.h" // Library for the ADS1115 ADC
 //#include "wiringPiSPI.h"
 #include <stdio.h>
@@ -20,6 +20,6 @@
 #include <string> //Int to String Conversion Library
 #include <ctime> //Standard C++ Time Library
 #include "ADIS16460.h"
-#include "PiHat.h"
+//#include PiHat.h"
 
 // TODO: reference additional headers your program requires here
