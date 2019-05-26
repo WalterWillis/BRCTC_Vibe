@@ -18,7 +18,10 @@ string MFile = MDir + "Master_Program_Data.txt";
 
 // Ints
 static int fileIncrementer = 0;
-const int arraySize = 300;
+const int arraySize = 600;
+const int elementSize = 13;
+
+
 
 int Startup() {
 	// Data Stream
@@ -29,7 +32,8 @@ int Startup() {
 	char* systime = ctime(&timeNow);
 	data_.open(MFile);
 
-	system("sudo rmmod rtc_ds1307");
+	//system("sudo rmmod rtc_ds1307");
+	system("sudo modprobe rtc_ds1307"); // we should be able to use the system time to call the rtc
 
 	if (data_.is_open()) {
 		data_ << "Master Data File Created..." << systime << endl;
@@ -61,28 +65,30 @@ int Startup() {
 
 
 
-void SendList(double adcValues[arraySize][4], double gyroValues[arraySize][11]) { //simulates writing to the SD card
+void SendList( double values[arraySize][elementSize]) { //simulates writing to the SD card
 
 	ofstream myfile;
 	string file = MDir + "Test " + to_string(fileIncrementer) + ".txt";
 
 
-	cout << "Wrinting to file: " << file << endl;
+	//cout << "Wrinting to file: " << file << endl;
 	myfile.open(file, ios::out | ios::app);
 
 	const char semi = ';';
+	time_t timeNow = time(0);
+	char* systime = ctime(&timeNow);
 
 	for (int i = 0; i < arraySize; i++) {
-		myfile << adcValues[i][0] << semi << adcValues[i][1] << semi << adcValues[i][2] << semi << adcValues[i][3] << semi
-			<< gyroValues[i][0] << semi << gyroValues[i][1] << semi << gyroValues[i][2] << semi << gyroValues[i][3] << semi
-			<< gyroValues[i][4] << semi << gyroValues[i][5] << semi << gyroValues[i][6] << semi << gyroValues[i][7] << semi
-			<< gyroValues[i][8] << semi << gyroValues[i][9] << semi << gyroValues[i][10] << semi << endl;
+		myfile << values[i][0] << semi << values[i][1] << semi << values[i][2] << semi << values[i][3] << semi
+			<< values[i][0] << semi << values[i][1] << semi << values[i][2] << semi << values[i][3] << semi
+			<< values[i][4] << semi << values[i][5] << semi << values[i][6] << semi << values[i][7] << semi
+			<< values[i][8] << semi << values[i][9] << semi << values[i][10] << semi << systime << endl;
 	}
 
 	myfile.flush();
 	myfile.close();
 
-	cout << "file write successful";
+	//cout << "file write successful";
 }
 
 
@@ -136,11 +142,8 @@ int main()
 		const int fileLines = 1200000;
 		const char semi = ';';
 
-		double adcValues[arraySize][4];
-		double gyroValues[arraySize][11];
-
-		double copy_adcValues[arraySize][4];
-		double copy_gyroValues[arraySize][11];
+		double values[arraySize][elementSize];
+		double copy_Values[arraySize][elementSize];
 		int fileLineCount = 0;
 
 		thread t;
@@ -153,42 +156,18 @@ int main()
 					//adcValues[i][3] =RTC.GetCurrentSeconds() - start_time; // get time in seconds since beginning of program
 					for (int pin = 0; pin < ADC_Pins; pin++)
 					{
-						adcValues[i][pin] = ADC.readADCChannel(pin) / (double)4095 * ADC.vref;
+						values[i][pin] = ADC.readADCChannel(pin);// / (double)4095 * ADC.vref;
 					}
 					//gyroValues[i][10] = RTC.GetCurrentSeconds() - start_time;
-					Gyro.burstRead(gyroValues[i]);
+					Gyro.burstRead(values[i], ADC_Pins);
 				}
-
-				
-/*
-				ofstream myfile;
-				string file = MDir + "Test " + to_string(fileIncrementer) + ".txt";
-				cout << "Wrinting to file: " << file << endl;
-				myfile.open(file, ios::out | ios::app);
-
-				cout << adcValues[5][0] << semi << adcValues[5][1] << semi << adcValues[5][2] << semi << adcValues[5][3] << semi
-					<< gyroValues[5][0] << semi << gyroValues[5][1] << semi << gyroValues[5][2] << semi << gyroValues[5][3] << semi
-					<< gyroValues[5][4] << semi << gyroValues[5][5] << semi << gyroValues[5][6] << semi << gyroValues[5][7] << semi
-					<< gyroValues[5][8] << semi << gyroValues[5][9] << semi << gyroValues[5][10] << semi << endl;
-
-				for (int i = 0; i < arraySize; i++) {
-					myfile << adcValues[i][0] << semi << adcValues[i][1] << semi << adcValues[i][2] << semi << adcValues[i][3] << semi
-						<< gyroValues[i][0] << semi << gyroValues[i][1] << semi << gyroValues[i][2] << semi << gyroValues[i][3] << semi
-						<< gyroValues[i][4] << semi << gyroValues[i][5] << semi << gyroValues[i][6] << semi << gyroValues[i][7] << semi
-						<< gyroValues[i][8] << semi << gyroValues[i][9] << semi << gyroValues[i][10] << semi << endl;
-				}
-
-				myfile.flush();
-				myfile.close();
-*/
 
 				if (t.joinable()) {
 					t.join();
 				}
 
-				memcpy(&copy_adcValues[0], &adcValues[0], arraySize * 4 * sizeof copy_adcValues[0][0]);
-				memcpy(&copy_gyroValues[0], &gyroValues[0], arraySize * 11 * sizeof copy_gyroValues[0][0]);
-				t = thread(SendList, copy_adcValues, copy_gyroValues);
+				memcpy(&copy_Values[0], &values[0], arraySize * elementSize * sizeof copy_Values[0][0]);
+				t = thread(SendList, copy_Values);
 
 				if (fileLineCount >= fileLines) { // do this after the join due to fileIncrementer being global
 					fileLineCount = 0;

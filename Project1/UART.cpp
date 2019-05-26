@@ -3,7 +3,7 @@
 
 UART::UART() {
 	//get the file descriptor
-	if ((fd = serialOpen("/dev/serial0", 115200)) < 0)
+	if ((fd = serialOpen("/dev/serial0", 57600)) < 0)
 	{
 		isValid = false;
 	}

@@ -125,7 +125,7 @@ int ADIS16460::RegWrite(uint8_t regAddr, int16_t regData)
 // Intiates a burst read from the sensor.
 // Returns a pointer to an array of sensor data. 
 ////////////////////////////////////////////////////////////////////////////
-void ADIS16460::burstRead(double * burstResults) {
+void ADIS16460::burstRead(double * burstResults, int8_t index) {
 
 	const int8_t length = 22;
 	//const int8_t wordLength = 10;
@@ -137,11 +137,10 @@ void ADIS16460::burstRead(double * burstResults) {
 
 	// Join bytes into words
 	// My version of data conversion
-	int counter = 0;
 	
 	for (int8_t i = 2; i < length; i += 2) {
 		//burstwords[counter++] = ((burstdata[i+1] << 8) | burstdata[i]); //reverse the order when converting for MSB
-		burstResults[counter++] = ByteCombiner(burstdata[i + 1], burstdata[i]).word;
+		burstResults[index++] = ByteCombiner(burstdata[i + 1], burstdata[i]).word;
 	}
 
 	//burstResults[0] = burstwords[0]; //DIAG_STAT
