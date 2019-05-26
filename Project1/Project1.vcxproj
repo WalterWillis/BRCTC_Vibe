@@ -64,9 +64,11 @@
     <ClCompile Include="ADIS16460.cpp" />
     <ClCompile Include="ads1115.c" />
     <ClCompile Include="PiGenProjectCode.cpp" />
+    <ClCompile Include="RTC.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="Thread1Code.cpp" />
     <ClCompile Include="Thread2Code.cpp" />
+    <ClCompile Include="UART.cpp" />
     <ClCompile Include="wiringPi.c" />
     <ClCompile Include="wiringPiI2C.c" />
     <ClCompile Include="wiringPiSPI.c" />
@@ -74,14 +76,20 @@
   <ItemGroup>
     <ClInclude Include="ADIS16460.h" />
     <ClInclude Include="ads1115.h" />
+    <ClInclude Include="RTC.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Thread1Code.h" />
     <ClInclude Include="Thread2Code.h" />
+    <ClInclude Include="UART.h" />
     <ClInclude Include="wiringPi.h" />
     <ClInclude Include="wiringPiI2C.h" />
     <ClInclude Include="wiringPiSPI.h" />
   </ItemGroup>
-  <ItemDefinitionGroup />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+    <ClCompile>
+      <CppLanguageStandard>gnu++1y</CppLanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
 </Project>

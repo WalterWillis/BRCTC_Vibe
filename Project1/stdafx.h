@@ -9,7 +9,7 @@
 
 //#include "targetver.h"
 #include "wiringPi.h" //Wiring Pi Library
-#include "ads1115.h" // Library for the ADS1115 ADC
+//#include "ads1115.h" // Library for the ADS1115 ADC
 //#include "wiringPiSPI.h"
 #include <stdio.h>
 //#include <tchar.h>
@@ -21,5 +21,12 @@
 #include <ctime> //Standard C++ Time Library
 #include "ADIS16460.h"
 #include "PiHat.h"
+#include <thread>
+#include <list>
+#include <wiringSerial.h>
+#include <string>
+#include <wiringPiI2C.h>
+#include <chrono>
+#include <unistd.h> 
 
 // TODO: reference additional headers your program requires here

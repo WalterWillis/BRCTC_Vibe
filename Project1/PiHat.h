@@ -8,7 +8,7 @@ class PiHat
 
 	private:
 		//WiringPi Pin Scheme
-		int _mode = 3; // SPI Mode
+		int _mode = 1; // SPI Mode
 		int _speed = 1000000; // frequency of signal
 		int _cs = 0;// CE0 on WiringPi
 

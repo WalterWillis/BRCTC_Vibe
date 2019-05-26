@@ -60,7 +60,7 @@ ADIS16460::ADIS16460(int channel, int speed, int mode, int rst)
 {
 	(wiringPiSPISetupMode(channel, speed, mode) < 0);
 	_channel = channel;
-		_speed = speed;
+	_speed = speed;
 	_mode = mode;
 	_RST = rst;
 }
@@ -89,7 +89,7 @@ int16_t ADIS16460::RegRead(uint8_t regAddr)
 
 	delayMicroseconds(40);
 
-	int16_t dataOut = (Data[0] << 8) | (Data[1] & 0xFF);
+	int16_t dataOut = (Data[1] << 8) | (Data[0] & 0xFF);
 
 	return dataOut;
 }
@@ -125,22 +125,39 @@ int ADIS16460::RegWrite(uint8_t regAddr, int16_t regData)
 // Intiates a burst read from the sensor.
 // Returns a pointer to an array of sensor data. 
 ////////////////////////////////////////////////////////////////////////////
-int16_t *ADIS16460::burstRead(void) {
+void ADIS16460::burstRead(double * burstResults) {
 
-	const int16_t length = 20;
-	uint8_t burstdata[length];
-	static int16_t burstwords[length/2];
+	const int8_t length = 22;
+	const int8_t wordLength = 10;
+	uint8_t burstdata[] = { 0x3E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+	short burstwords[wordLength];
 	// Trigger Burst Read
 	wiringPiSPIDataRW(_channel, burstdata, length);
 
 	// Join bytes into words
 	// My version of data conversion
-	for (int i = 0; i < length; i + 2) {
-		burstwords[i/2] = ((burstdata[i] << 8) | (burstdata[i + 1] & 0xFF)); 
+	int counter = 0;
+	ByteCombiner combiner;
+	for (int8_t i = 2; i < length; i += 2) {
+		//burstwords[counter++] = ((burstdata[i+1] << 8) | burstdata[i]); //reverse the order when converting for MSB
+		combiner.a = burstdata[i + 1];
+		combiner.b = burstdata[i];
+		burstwords[counter++] = combiner.word;
 	}
+
+	burstResults[0] = burstwords[0]; //DIAG_STAT
+	burstResults[1] = gyroScale(burstwords[1]);//XGYRO
+	burstResults[2] = gyroScale(burstwords[2]); //YGYRO
+	burstResults[3] = gyroScale(burstwords[3]); //ZGYRO
+	burstResults[4] = accelScale(burstwords[4]); //XACCEL
+	burstResults[5] = accelScale(burstwords[5]); //YACCEL
+	burstResults[6] = accelScale(burstwords[6]); //ZACCEL
+	burstResults[7] = tempScale(burstwords[7]); //TEMP_OUT
+	burstResults[8] = burstwords[8]; //SMPL_CNTR
+	burstResults[9] = burstwords[9]; //CHECKSUM
 	//Data order
 	//DIAG_STAT//XGYRO//YGYRO//ZGYRO//XACCEL//YACCEL//ZACCEL//TEMP_OUT//SMPL_CNTR//CHECKSUM
-	return burstwords;
 }
 
 ////////////////////////////////////////////////////////////////////////////
