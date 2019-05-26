@@ -8,7 +8,7 @@
 #define _CRT_SECURE_NO_WARNINGS 0
 
 //#include "targetver.h"
-#include "wiringPi.h" //Wiring Pi Library
+#include <wiringPi.h> //Wiring Pi Library
 //#include "ads1115.h" // Library for the ADS1115 ADC
 //#include "wiringPiSPI.h"
 #include <stdio.h>
@@ -22,11 +22,10 @@
 #include "ADIS16460.h"
 #include "PiHat.h"
 #include <thread>
-#include <list>
 #include <wiringSerial.h>
 #include <string>
 #include <wiringPiI2C.h>
-#include <chrono>
 #include <unistd.h> 
+#include <forward_list>
 
 // TODO: reference additional headers your program requires here

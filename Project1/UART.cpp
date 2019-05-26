@@ -12,8 +12,8 @@ UART::UART() {
 	}
 }
 
-void UART::SendData(list<list<double>> dataList) {
-	for (list<double> data : dataList) {
+void UART::SendData(forward_list< forward_list<int>> biglist) {
+	for (forward_list<int> data : biglist) {
 		string str;
 
 		for (double d : data) {
