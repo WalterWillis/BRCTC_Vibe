@@ -128,34 +128,33 @@ int ADIS16460::RegWrite(uint8_t regAddr, int16_t regData)
 void ADIS16460::burstRead(double * burstResults) {
 
 	const int8_t length = 22;
-	const int8_t wordLength = 10;
+	//const int8_t wordLength = 10;
 	uint8_t burstdata[] = { 0x3E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-	short burstwords[wordLength];
+	//short burstwords[wordLength];
 	// Trigger Burst Read
 	wiringPiSPIDataRW(_channel, burstdata, length);
 
 	// Join bytes into words
 	// My version of data conversion
 	int counter = 0;
-	ByteCombiner combiner;
+	
 	for (int8_t i = 2; i < length; i += 2) {
 		//burstwords[counter++] = ((burstdata[i+1] << 8) | burstdata[i]); //reverse the order when converting for MSB
-		combiner.a = burstdata[i + 1];
-		combiner.b = burstdata[i];
-		burstwords[counter++] = combiner.word;
+		burstResults[counter++] = ByteCombiner(burstdata[i + 1], burstdata[i]).word;
 	}
 
-	burstResults[0] = burstwords[0]; //DIAG_STAT
-	burstResults[1] = gyroScale(burstwords[1]);//XGYRO
-	burstResults[2] = gyroScale(burstwords[2]); //YGYRO
-	burstResults[3] = gyroScale(burstwords[3]); //ZGYRO
-	burstResults[4] = accelScale(burstwords[4]); //XACCEL
-	burstResults[5] = accelScale(burstwords[5]); //YACCEL
-	burstResults[6] = accelScale(burstwords[6]); //ZACCEL
-	burstResults[7] = tempScale(burstwords[7]); //TEMP_OUT
-	burstResults[8] = burstwords[8]; //SMPL_CNTR
-	burstResults[9] = burstwords[9]; //CHECKSUM
+	//burstResults[0] = burstwords[0]; //DIAG_STAT
+	//burstResults[1] = gyroScale(burstwords[1]);//XGYRO
+	//burstResults[2] = gyroScale(burstwords[2]); //YGYRO
+	//burstResults[3] = gyroScale(burstwords[3]); //ZGYRO
+	//burstResults[4] = accelScale(burstwords[4]); //XACCEL
+	//burstResults[5] = accelScale(burstwords[5]); //YACCEL
+	//burstResults[6] = accelScale(burstwords[6]); //ZACCEL
+	//burstResults[7] = tempScale(burstwords[7]); //TEMP_OUT
+	//burstResults[8] = burstwords[8]; //SMPL_CNTR
+	//burstResults[9] = burstwords[9]; //CHECKSUM
+
 	//Data order
 	//DIAG_STAT//XGYRO//YGYRO//ZGYRO//XACCEL//YACCEL//ZACCEL//TEMP_OUT//SMPL_CNTR//CHECKSUM
 }

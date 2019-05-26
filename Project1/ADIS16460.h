@@ -86,6 +86,10 @@ class ADIS16460
 
 		struct ByteCombiner
 		{
+			ByteCombiner(int8_t _a, int8_t _b) {
+				a = _a;
+				b = _b;
+			}
 			union
 			{
 				uint16_t word;

@@ -17,7 +17,7 @@
 #include <iostream> //Standard C++ Library for Input / Output Stream
 #include <fstream> //Library for Working with .txt Files
 #include <cstdint> //Standard C Int Library
-#include <string> //Int to String Conversion Library
+#include <string.h> //Int to String Conversion Library
 #include <ctime> //Standard C++ Time Library
 #include "ADIS16460.h"
 #include "PiHat.h"

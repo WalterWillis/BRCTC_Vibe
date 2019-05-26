@@ -18,6 +18,7 @@ string MFile = MDir + "Master_Program_Data.txt";
 
 // Ints
 static int fileIncrementer = 0;
+const int arraySize = 300;
 
 int Startup() {
 	// Data Stream
@@ -60,27 +61,22 @@ int Startup() {
 
 
 
-void SendList(std::list<std::list<double>> list) { //simulates writing to the SD card
-	if (list.size() < 1)
-		return;
+void SendList(double adcValues[arraySize][4], double gyroValues[arraySize][11]) { //simulates writing to the SD card
 
 	ofstream myfile;
 	string file = MDir + "Test " + to_string(fileIncrementer) + ".txt";
 
+
 	cout << "Wrinting to file: " << file << endl;
 	myfile.open(file, ios::out | ios::app);
 
-	for (std::list<double> innerlist : list) {
-		string line = "";
-		for (double value : innerlist) {
-			if (myfile.is_open())
-			{
-				line += to_string(value) + ";";
-			}
-			cout << line << endl;
-			sleep(1);
-			myfile << line << endl;
-		}
+	const char semi = ';';
+
+	for (int i = 0; i < arraySize; i++) {
+		myfile << adcValues[i][0] << semi << adcValues[i][1] << semi << adcValues[i][2] << semi << adcValues[i][3] << semi
+			<< gyroValues[i][0] << semi << gyroValues[i][1] << semi << gyroValues[i][2] << semi << gyroValues[i][3] << semi
+			<< gyroValues[i][4] << semi << gyroValues[i][5] << semi << gyroValues[i][6] << semi << gyroValues[i][7] << semi
+			<< gyroValues[i][8] << semi << gyroValues[i][9] << semi << gyroValues[i][10] << semi << endl;
 	}
 
 	myfile.flush();
@@ -126,14 +122,8 @@ void PiHatHeader(string file)
 int main()
 {
 	try {
-		int rc = Startup();
-
-
-
-		std::list<double> smallList;
-		std::list<std::list<double>> bigList;
-
-		std::thread t;  // ideally, we would have 2 threads. One for local storage, and another for telemetry. Good enough for testing.
+		//int rc = Startup();
+		Startup();
 
 				////ADC SETUP
 		PiHat ADC;
@@ -142,58 +132,72 @@ int main()
 
 		double start_time = RTC.GetCurrentSeconds();
 
-		const int resultLen = 10;
-
-
-
 		const int ADC_Pins = 3;
-		const int arraySize = 30000;
 		const int fileLines = 1200000;
+		const char semi = ';';
+
+		double adcValues[arraySize][4];
+		double gyroValues[arraySize][11];
+
+		double copy_adcValues[arraySize][4];
+		double copy_gyroValues[arraySize][11];
 		int fileLineCount = 0;
 
-		bool firstStart = true;
+		thread t;
 
 		cout << "starting loop"<< endl;
 		while (true) { // the t thread should wait long enough for the next 5 loop cycles without any errors
-
 			try {
-
-					if (t.joinable()) {
-						cout << "joining thread" << endl;
-						t.join(); //if the thread is already running, wait until the work is done;
-						cout << "finished joining thread" << endl;
-					}
-
-					if (fileLineCount >= fileLines) { // do this after the join due to fileIncrementer being global
-						fileLineCount = 0;
-						fileIncrementer++;
-					}
-
-					t = std::thread{ SendList, std::move(bigList) }; // start the thread
-					fileLineCount += bigList.size();
-					bigList.clear(); // remove previous list values
-
-					
-
 				for (int i = 0; i < arraySize; i++) {//get lots of data. In reality, the outer loop would be where there are many iterations with the inner loop collecting data
-					int result;
-
 					//maybe just use rtc day, hour, min and sec values
-					smallList.push_back(RTC.GetCurrentSeconds() - start_time); // get time in seconds since beginning of program
+					//adcValues[i][3] =RTC.GetCurrentSeconds() - start_time; // get time in seconds since beginning of program
 					for (int pin = 0; pin < ADC_Pins; pin++)
 					{
-						result = ADC.readADCChannel(pin);
-						smallList.push_back((double)result / (double)4095 * ADC.vref);
+						adcValues[i][pin] = ADC.readADCChannel(pin) / (double)4095 * ADC.vref;
 					}
-					double results[resultLen];
-					smallList.push_back(RTC.GetCurrentSeconds() - start_time);
-					Gyro.burstRead(results);
-
-					smallList.insert(smallList.end(), results, results + resultLen); //so, this is a thing
-
+					//gyroValues[i][10] = RTC.GetCurrentSeconds() - start_time;
+					Gyro.burstRead(gyroValues[i]);
 				}
-				bigList.push_back(smallList); // add value to the back of the list
-				smallList.clear();
+
+				
+/*
+				ofstream myfile;
+				string file = MDir + "Test " + to_string(fileIncrementer) + ".txt";
+				cout << "Wrinting to file: " << file << endl;
+				myfile.open(file, ios::out | ios::app);
+
+				cout << adcValues[5][0] << semi << adcValues[5][1] << semi << adcValues[5][2] << semi << adcValues[5][3] << semi
+					<< gyroValues[5][0] << semi << gyroValues[5][1] << semi << gyroValues[5][2] << semi << gyroValues[5][3] << semi
+					<< gyroValues[5][4] << semi << gyroValues[5][5] << semi << gyroValues[5][6] << semi << gyroValues[5][7] << semi
+					<< gyroValues[5][8] << semi << gyroValues[5][9] << semi << gyroValues[5][10] << semi << endl;
+
+				for (int i = 0; i < arraySize; i++) {
+					myfile << adcValues[i][0] << semi << adcValues[i][1] << semi << adcValues[i][2] << semi << adcValues[i][3] << semi
+						<< gyroValues[i][0] << semi << gyroValues[i][1] << semi << gyroValues[i][2] << semi << gyroValues[i][3] << semi
+						<< gyroValues[i][4] << semi << gyroValues[i][5] << semi << gyroValues[i][6] << semi << gyroValues[i][7] << semi
+						<< gyroValues[i][8] << semi << gyroValues[i][9] << semi << gyroValues[i][10] << semi << endl;
+				}
+
+				myfile.flush();
+				myfile.close();
+*/
+
+				if (t.joinable()) {
+					t.join();
+				}
+
+				memcpy(&copy_adcValues[0], &adcValues[0], arraySize * 4 * sizeof copy_adcValues[0][0]);
+				memcpy(&copy_gyroValues[0], &gyroValues[0], arraySize * 11 * sizeof copy_gyroValues[0][0]);
+				t = thread(SendList, copy_adcValues, copy_gyroValues);
+
+				if (fileLineCount >= fileLines) { // do this after the join due to fileIncrementer being global
+					fileLineCount = 0;
+					fileIncrementer++;
+				}
+
+				fileLineCount += arraySize;
+
+				//cout << "file write successful";
 			}
 			catch (const exception& e) {
 				cout << "Error in loop" << endl;
@@ -201,9 +205,6 @@ int main()
 				throw e;
 			}
 		}
-		if (t.joinable())
-			t.join(); // wait for the thread to finish
-		t.detach();
 	}
 	catch (const exception& e) {
 		cout << "fatal error" << endl << e.what() << endl;
