@@ -108,7 +108,7 @@ class ADIS16460
 
 		ADIS16460();	
 		ADIS16460(int channel, int speed, int mode, int RST);	
-		void burstRead(short * burstResults);
+		void burstRead(short * burstResults, int8_t index);
 		int16_t checksum(int16_t * burstArray);
 		int16_t RegRead(uint8_t regAddr);
 		int RegWrite(uint8_t regAddr, int16_t regData);

@@ -16,8 +16,8 @@ string MFile = MDir + "Master_Program_Data.txt";
 
 // Ints
 static int fileIncrementer = 0;
-const int arraySize = 30000;
-const int elementSize = 12; //actual size is 13
+const int arraySize = 40;//45 (5100 dps);//290 (4500 dps);
+const int elementSize = 13;
 
 
 
@@ -67,7 +67,7 @@ int Startup() {
 
 
 
-void SendList(forward_list<int> list) { //simulates writing to the SD card
+void SendList(short values[arraySize][elementSize]) { //simulates writing to the SD card
 
 	ofstream myfile;
 	string file = MDir + "Test " + to_string(fileIncrementer) + ".txt";
@@ -79,20 +79,15 @@ void SendList(forward_list<int> list) { //simulates writing to the SD card
 	time_t timeNow = time(0);
 	char* systime = ctime(&timeNow);
 
-	int counter = 0;
-	for (auto const& i : list) {
-		myfile << i << semi;
-		if (counter++ == elementSize) {
-			myfile << systime;
-			counter = 0;
-		}
+	for (int i = 0; i < arraySize; i++) {
+		myfile << values[i][0] << semi << values[i][1] << semi << values[i][2] << semi << values[i][3] << semi
+			<< values[i][0] << semi << values[i][1] << semi << values[i][2] << semi << values[i][3] << semi
+			<< values[i][4] << semi << values[i][5] << semi << values[i][6] << semi << values[i][7] << semi
+			<< values[i][8] << semi << values[i][9] << semi << values[i][10] << semi << systime;
 	}
+
 	myfile.flush();
 	myfile.close();
-
-	list.clear();
-
-	//cout << "file write successful";
 }
 
 int main()
@@ -113,6 +108,8 @@ int main()
 		int fileLineCount = 0;
 
 		thread t;
+		short values[arraySize][elementSize];
+
 
 		cout << "starting loop" << endl;
 		while (true) {
@@ -121,14 +118,10 @@ int main()
 					
 					for (int pin = 0; pin < ADC_Pins; pin++)
 					{
-						masterList.emplace_front(ADC.readADCChannel(pin));// / (double)4095 * ADC.vref;
-					}
-					short array[10];
-					Gyro.burstRead(array);
+						values[i][pin] = ADC.readADCChannel(pin);// / (double)4095 * ADC.vref;
+					}		
+					Gyro.burstRead(values[i], ADC_Pins);
 					
-					for (short d : array) {
-						masterList.emplace_front(d);
-					}					
 				}
 
 
@@ -140,7 +133,7 @@ int main()
 					fileLineCount = 0;
 					fileIncrementer++;
 				}
-				t = thread(bind( SendList, masterList));
+				t = thread(SendList, values);
 				masterList.clear();
 				fileLineCount += arraySize;
 
