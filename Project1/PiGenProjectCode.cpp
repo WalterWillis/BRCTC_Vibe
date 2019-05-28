@@ -10,15 +10,26 @@ using namespace std;
 
 //// Globals
 
+//const string newline = "\n";
+
+// Numerical
+static int fileIncrementer = 0;
+const int arraySize = 45;// (5100 dps);//290 (4500 dps);
+const int elementSize = 13;
+long timeCounter = 0;
+const long timeChange = arraySize * 20; //get the time less often. uses RTC less, thus less latency
+
+// Time
+time_t timeNow = time(0);
+char* systime = ctime(&timeNow);
+//int UART;
+
+
 // Strings
 static const string MDir = "/home/pi/Desktop/Vibe2019Cpp/";
+string file = MDir + "Test " + to_string(fileIncrementer) + ".txt";
 string MFile = MDir + "Master_Program_Data.txt";
-
-// Ints
-static int fileIncrementer = 0;
-const int arraySize = 40;//45 (5100 dps);//290 (4500 dps);
-const int elementSize = 13;
-
+const char semi = ';';
 
 
 int Startup() {
@@ -26,8 +37,8 @@ int Startup() {
 	ofstream data_;
 
 	//Create Master File
-	time_t timeNow = time(0);
-	char* systime = ctime(&timeNow);
+	timeNow = time(0);
+	systime = ctime(&timeNow);
 	data_.open(MFile);
 
 	//system("sudo rmmod rtc_ds1307");
@@ -55,6 +66,17 @@ int Startup() {
 		systime = ctime(&timeNow);
 		data_ << "\tWiring Pi Setup Complete..." << systime << endl;
 
+
+		///interestingly, file descriptor as 0 is cout.
+		///so, forgetting to set UART defaults to cout
+		/*timeNow = time(0);
+		systime = ctime(&timeNow);
+		data_ << "\tUART Setup Started..." << systime << endl;
+		UART = serialOpen("/dev/serial0", 57600);
+		timeNow = time(0);
+		systime = ctime(&timeNow);
+		data_ << "\tUART Setup Complete..." << systime << endl;
+*/
 		timeNow = time(0);
 		systime = ctime(&timeNow);
 		data_ << "System Device Setup Complete..." << systime << endl;
@@ -67,17 +89,17 @@ int Startup() {
 
 
 
-void SendList(short values[arraySize][elementSize]) { //simulates writing to the SD card
+void DataHandler(short values[arraySize][elementSize]) { //simulates writing to the SD card
 
 	ofstream myfile;
-	string file = MDir + "Test " + to_string(fileIncrementer) + ".txt";
-
-	//cout << "Wrinting to file: " << file << endl;
+	
 	myfile.open(file, ios::out | ios::app);
-
-	const char semi = ';';
-	time_t timeNow = time(0);
-	char* systime = ctime(&timeNow);
+	
+	if (timeCounter++ >= timeChange) {
+		timeNow = time(0);
+		systime = ctime(&timeNow);
+		timeCounter = 0;
+	}
 
 	for (int i = 0; i < arraySize; i++) {
 		myfile << values[i][0] << semi << values[i][1] << semi << values[i][2] << semi << values[i][3] << semi
@@ -90,6 +112,22 @@ void SendList(short values[arraySize][elementSize]) { //simulates writing to the
 	myfile.close();
 }
 
+//void Telemetry(short values[arraySize][elementSize]) {
+//	//char x[arraySize][(elementSize * 2)];
+//	//memcpy(&values, x, sizeof(short)); //convert to char array
+//
+//	string s = "";
+//	for (int i = 0; i < arraySize; i++) {
+//		for (int j = 0; j < elementSize; j++) {
+//			s += to_string(values[i][j]) + semi;
+//		}
+//		s += newline;
+//	}
+//	for (int i = 0; i < arraySize; i++) {
+//		serialPrintf(UART, s.c_str());
+//	}
+//}
+
 int main()
 {
 	try {
@@ -101,13 +139,12 @@ int main()
 		ADIS16460 Gyro;
 
 		const int ADC_Pins = 3;
-		const int fileLines = 1200000;
-
-		forward_list<int> masterList;
+		const int fileLines = 10000000;
 
 		int fileLineCount = 0;
 
 		thread t;
+		//thread t_uArt;
 		short values[arraySize][elementSize];
 
 
@@ -120,35 +157,48 @@ int main()
 					{
 						values[i][pin] = ADC.readADCChannel(pin);// / (double)4095 * ADC.vref;
 					}		
-					Gyro.burstRead(values[i], ADC_Pins);
-					
+					Gyro.burstRead(values[i], ADC_Pins);					
 				}
-
 
 				if (t.joinable()) {
 					t.join();					
 				}
-			
+
 				if (fileLineCount >= fileLines) { // do this after the join due to fileIncrementer being global
 					fileLineCount = 0;
 					fileIncrementer++;
+					file = MDir + "Test" + to_string(fileIncrementer) + ".txt";
 				}
-				t = thread(SendList, values);
-				masterList.clear();
+				t = thread(DataHandler, values);
+
+				//if (!t_uArt.joinable()) {// UART is very slow. just let it finish on its own time.
+				//	t_uArt = thread(Telemetry, values);
+				//}
 				fileLineCount += arraySize;
 
 				//cout << "file write successful";
 			}
 			catch (const exception& e) {
-				cout << "Error in loop" << endl;
-				cout << e.what();
-				throw e;
+				ofstream log;
+				timeNow = time(0);
+				systime = ctime(&timeNow);
+				log.open(MFile);
+				log << systime << ": Error in loop!" << endl;
+				log << e.what();
+				log.flush();
+				log.close();
 			}
 		}
 	}
 	catch (const exception& e) {
-		cout << "fatal error" << endl << e.what() << endl;
-		system("sudo modprobe rtc_ds1307");
+		ofstream log;
+		timeNow = time(0);
+		systime = ctime(&timeNow);
+		log.open(MFile);
+		log << systime << ": Fatal Error!" << endl;
+		log << e.what();
+		log.flush();
+		log.close();
 	}
 }
 
