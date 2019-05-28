@@ -14,15 +14,16 @@ using namespace std;
 
 // Numerical
 static int fileIncrementer = 0;
-const int arraySize = 45;// (5100 dps);//290 (4500 dps);
 const int elementSize = 13;
+//The SD card should be writing in 4KB chunks. Divide that into the expected amount of data to get the array size required for optimal 4 KB writes.
+const int arraySize = 4096 / (elementSize * 2 + 24); //45;// (5100 dps);//290 (4500 dps);
 long timeCounter = 0;
 const long timeChange = arraySize * 20; //get the time less often. uses RTC less, thus less latency
 
 // Time
 time_t timeNow = time(0);
 char* systime = ctime(&timeNow);
-//int UART;
+int UART;
 
 
 // Strings
@@ -30,6 +31,7 @@ static const string MDir = "/home/pi/Desktop/Vibe2019Cpp/";
 string file = MDir + "Test " + to_string(fileIncrementer) + ".txt";
 string MFile = MDir + "Master_Program_Data.txt";
 const char semi = ';';
+const string newline = "\n";
 
 
 int Startup() {
@@ -69,14 +71,14 @@ int Startup() {
 
 		///interestingly, file descriptor as 0 is cout.
 		///so, forgetting to set UART defaults to cout
-		/*timeNow = time(0);
+		timeNow = time(0);
 		systime = ctime(&timeNow);
 		data_ << "\tUART Setup Started..." << systime << endl;
 		UART = serialOpen("/dev/serial0", 57600);
 		timeNow = time(0);
 		systime = ctime(&timeNow);
 		data_ << "\tUART Setup Complete..." << systime << endl;
-*/
+
 		timeNow = time(0);
 		systime = ctime(&timeNow);
 		data_ << "System Device Setup Complete..." << systime << endl;
@@ -105,28 +107,28 @@ void DataHandler(short values[arraySize][elementSize]) { //simulates writing to 
 		myfile << values[i][0] << semi << values[i][1] << semi << values[i][2] << semi << values[i][3] << semi
 			<< values[i][0] << semi << values[i][1] << semi << values[i][2] << semi << values[i][3] << semi
 			<< values[i][4] << semi << values[i][5] << semi << values[i][6] << semi << values[i][7] << semi
-			<< values[i][8] << semi << values[i][9] << semi << values[i][10] << semi << systime;
+			<< values[i][8] << semi << values[i][9] << semi << values[i][10] << systime;
 	}
 
 	myfile.flush();
 	myfile.close();
 }
 
-//void Telemetry(short values[arraySize][elementSize]) {
-//	//char x[arraySize][(elementSize * 2)];
-//	//memcpy(&values, x, sizeof(short)); //convert to char array
-//
-//	string s = "";
-//	for (int i = 0; i < arraySize; i++) {
-//		for (int j = 0; j < elementSize; j++) {
-//			s += to_string(values[i][j]) + semi;
-//		}
-//		s += newline;
-//	}
-//	for (int i = 0; i < arraySize; i++) {
-//		serialPrintf(UART, s.c_str());
-//	}
-//}
+void Telemetry(short values[arraySize][elementSize]) {
+	//char x[arraySize][(elementSize * 2)];
+	//memcpy(&values, x, sizeof(short)); //convert to char array
+
+	string s = "";
+	for (int i = 0; i < arraySize; i++) {
+		for (int j = 0; j < elementSize; j++) {
+			s += to_string(values[i][j]) + semi;
+		}
+		s += newline;
+	}
+	for (int i = 0; i < arraySize; i++) {
+		serialPrintf(UART, s.c_str());
+	}
+}
 
 int main()
 {
@@ -144,7 +146,7 @@ int main()
 		int fileLineCount = 0;
 
 		thread t;
-		//thread t_uArt;
+		thread t_uArt;
 		short values[arraySize][elementSize];
 
 
@@ -171,12 +173,10 @@ int main()
 				}
 				t = thread(DataHandler, values);
 
-				//if (!t_uArt.joinable()) {// UART is very slow. just let it finish on its own time.
-				//	t_uArt = thread(Telemetry, values);
-				//}
+				if (!t_uArt.joinable()) {// UART is very slow. just let it finish on its own time.
+					t_uArt = thread(Telemetry, values);
+				}
 				fileLineCount += arraySize;
-
-				//cout << "file write successful";
 			}
 			catch (const exception& e) {
 				ofstream log;
