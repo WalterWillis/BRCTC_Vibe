@@ -108,15 +108,15 @@ class ADIS16460
 
 		ADIS16460();	
 		ADIS16460(int channel, int speed, int mode, int RST);	
-		void burstRead(short * burstResults, int8_t index);
+		void burstRead(double * burstResults, int8_t index);
 		int16_t checksum(int16_t * burstArray);
 		int16_t RegRead(uint8_t regAddr);
 		int RegWrite(uint8_t regAddr, int16_t regData);
-		float accelScale(int16_t sensorData);
-		float gyroScale(int16_t sensorData);
-		float tempScale(int16_t sensorData);
-		float deltaAngleScale(int16_t sensorData);
-		float deltaVelocityScale(int16_t sensorData);
+		double accelScale(int16_t sensorData);
+		double gyroScale(int16_t sensorData);
+		double tempScale(int16_t sensorData);
+		double deltaAngleScale(int16_t sensorData);
+		double deltaVelocityScale(int16_t sensorData);
 		int resetDUT(uint8_t ms);
 
 		//unsigned int readreg(unsigned char nbits, unsigned char reg);

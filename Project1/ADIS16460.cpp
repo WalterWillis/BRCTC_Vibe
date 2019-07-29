@@ -125,7 +125,7 @@ int ADIS16460::RegWrite(uint8_t regAddr, int16_t regData)
 // Intiates a burst read from the sensor.
 // Returns a pointer to an array of sensor data. 
 ////////////////////////////////////////////////////////////////////////////
-void ADIS16460::burstRead(short * burstResults, int8_t index) {
+void ADIS16460::burstRead(double * burstResults, int8_t index) {
 
 	const int8_t length = 22;
 	//const int8_t wordLength = 10;
@@ -137,21 +137,21 @@ void ADIS16460::burstRead(short * burstResults, int8_t index) {
 
 	// Join bytes into words
 	// My version of data conversion
-	for (int8_t i = 2; i < length; i += 2) {
-		//burstwords[counter++] = ((burstdata[i+1] << 8) | burstdata[i]); //reverse the order when converting for MSB
-		burstResults[index++] = ByteCombiner(burstdata[i + 1], burstdata[i]).word;
-	}
+	//for (int8_t i = 2; i < length; i += 2) {
+	//	//burstwords[counter++] = ((burstdata[i+1] << 8) | burstdata[i]); //reverse the order when converting for MSB
+	//	burstResults[index++] = ByteCombiner(burstdata[i + 1], burstdata[i]).word;
+	//}
 
-	//burstResults[0] = burstwords[0]; //DIAG_STAT
-	//burstResults[1] = gyroScale(burstwords[1]);//XGYRO
-	//burstResults[2] = gyroScale(burstwords[2]); //YGYRO
-	//burstResults[3] = gyroScale(burstwords[3]); //ZGYRO
-	//burstResults[4] = accelScale(burstwords[4]); //XACCEL
-	//burstResults[5] = accelScale(burstwords[5]); //YACCEL
-	//burstResults[6] = accelScale(burstwords[6]); //ZACCEL
-	//burstResults[7] = tempScale(burstwords[7]); //TEMP_OUT
-	//burstResults[8] = burstwords[8]; //SMPL_CNTR
-	//burstResults[9] = burstwords[9]; //CHECKSUM
+	burstResults[index++] = (burstdata[3] << 8 | burstdata[2]); //DIAG_STAT
+	burstResults[index++] = gyroScale((burstdata[5] << 8 | burstdata[4]));//XGYRO
+	burstResults[index++] = gyroScale((burstdata[7] << 8 | burstdata[6])); //YGYRO
+	burstResults[index++] = gyroScale((burstdata[9] << 8 | burstdata[8])); //ZGYRO
+	burstResults[index++] = accelScale((burstdata[11] << 8 | burstdata[10])); //XACCEL
+	burstResults[index++] = accelScale((burstdata[13] << 8 | burstdata[12])); //YACCEL
+	burstResults[index++] = accelScale((burstdata[15] << 8 | burstdata[14])); //ZACCEL
+	burstResults[index++] = tempScale((burstdata[17] << 8 | burstdata[16])); //TEMP_OUT
+	burstResults[index++] = (burstdata[19] << 8 | burstdata[18]); //SMPL_CNTR
+	burstResults[index++] = (burstdata[21] << 8 | burstdata[20]); //CHECKSUM
 
 	//Data order
 	//DIAG_STAT//XGYRO//YGYRO//ZGYRO//XACCEL//YACCEL//ZACCEL//TEMP_OUT//SMPL_CNTR//CHECKSUM
@@ -182,9 +182,9 @@ int16_t ADIS16460::checksum(int16_t * burstArray) {
 // sensorData - data output from regRead()
 // return - (float) signed/scaled accelerometer in g's
 /////////////////////////////////////////////////////////////////////////////////////////
-float ADIS16460::accelScale(int16_t sensorData)
+double ADIS16460::accelScale(int16_t sensorData)
 {
-	float finalData = sensorData * 0.00025; // Multiply by accel sensitivity (25 mg/LSB)
+	double finalData = sensorData * 0.00025; // Multiply by accel sensitivity (25 mg/LSB)
 	return finalData;
 }
 
@@ -194,9 +194,9 @@ float ADIS16460::accelScale(int16_t sensorData)
 // sensorData - data output from regRead()
 // return - (float) signed/scaled gyro in degrees/sec
 /////////////////////////////////////////////////////////////////////////////////////////
-float ADIS16460::gyroScale(int16_t sensorData)
+double ADIS16460::gyroScale(int16_t sensorData)
 {
-	float finalData = sensorData * 0.005;
+	double finalData = sensorData * 0.005;
 	return finalData;
 }
 
@@ -207,7 +207,7 @@ float ADIS16460::gyroScale(int16_t sensorData)
 // sensorData - data output from regRead()
 // return - (float) signed/scaled temperature in degrees Celcius
 /////////////////////////////////////////////////////////////////////////////////////////
-float ADIS16460::tempScale(int16_t sensorData)
+double ADIS16460::tempScale(int16_t sensorData)
 {
 	int signedData = 0;
 	int isNeg = sensorData & 0x8000;
@@ -215,7 +215,7 @@ float ADIS16460::tempScale(int16_t sensorData)
 		signedData = sensorData - 0xFFFF;
 	else
 		signedData = sensorData;
-	float finalData = (signedData * 0.05) + 25; // Multiply by temperature scale and add 25 to equal 0x0000
+	double finalData = (signedData * 0.05) + 25; // Multiply by temperature scale and add 25 to equal 0x0000
 	return finalData;
 }
 
@@ -225,9 +225,9 @@ float ADIS16460::tempScale(int16_t sensorData)
 // sensorData - data output from regRead()
 // return - (float) signed/scaled delta angle in degrees
 /////////////////////////////////////////////////////////////////////////////////////////
-float ADIS16460::deltaAngleScale(int16_t sensorData)
+double ADIS16460::deltaAngleScale(int16_t sensorData)
 {
-	float finalData = sensorData * 0.005; // Multiply by delta angle scale (0.005 degrees/LSB)
+	double finalData = sensorData * 0.005; // Multiply by delta angle scale (0.005 degrees/LSB)
 	return finalData;
 }
 
@@ -237,9 +237,9 @@ float ADIS16460::deltaAngleScale(int16_t sensorData)
 // sensorData - data output from regRead()
 // return - (float) signed/scaled delta velocity in mm/sec
 /////////////////////////////////////////////////////////////////////////////////////////
-float ADIS16460::deltaVelocityScale(int16_t sensorData)
+double ADIS16460::deltaVelocityScale(int16_t sensorData)
 {
-	float finalData = sensorData * 2.5; // Multiply by velocity scale (2.5 mm/sec/LSB)
+	double finalData = sensorData * 2.5; // Multiply by velocity scale (2.5 mm/sec/LSB)
 	return finalData;
 }
 

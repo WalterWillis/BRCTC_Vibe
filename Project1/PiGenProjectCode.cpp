@@ -106,7 +106,7 @@ int Startup() {
 
 
 
-void DataHandler(short values[arraySize][elementSize], string times[arraySize]) { //simulates writing to the SD card
+void DataHandler(double values[arraySize][elementSize], string times[arraySize]) { //simulates writing to the SD card
 
 	ofstream myfile;
 	
@@ -132,7 +132,7 @@ void DataHandler(short values[arraySize][elementSize], string times[arraySize]) 
 	myfile.close();
 }
 
-void Telemetry(short values[arraySize][elementSize], string times[arraySize]) {
+void Telemetry(double values[arraySize][elementSize], string times[arraySize]) {
 	//char x[arraySize][(elementSize * 2)];
 	//memcpy(&values, x, sizeof(short)); //convert to char array
 
@@ -177,7 +177,7 @@ int main()
 
 		thread t;
 		thread t_uArt;
-		short values[arraySize][elementSize];
+		double values[arraySize][elementSize];
 		string times[arraySize];
 		
 		cout << "starting loop" << endl;
@@ -187,7 +187,7 @@ int main()
 				for (int i = 0; i < arraySize; i++) {
 					for (int pin = 0; pin < ADC_Pins; pin++)
 					{
-						values[i][pin] = ADC.readADCChannel(pin);// / (double)4095 * ADC.vref;
+						values[i][pin] = ADC.readADCChannel(pin) / (double)4095 * ADC.vref;
 					}		
 					Gyro.burstRead(values[i], ADC_Pins);	
 
