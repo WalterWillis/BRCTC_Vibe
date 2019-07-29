@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include <stdlib.h> //Library for system functions
 #include "PiGenProjectCode.h"
+#include <sstream>
 
 
 using namespace std;
@@ -27,7 +28,7 @@ int UART;
 
 
 // Strings
-static const string MDir = "/home/pi/Desktop/Vibe2019Cpp/";
+static string MDir = "/home/pi/Desktop/Vibe2019Cpp/";
 string file = MDir + "Test " + to_string(fileIncrementer) + ".txt";
 string MFile = MDir + "Master_Program_Data.txt";
 const char semi = ';';
@@ -41,6 +42,20 @@ int Startup() {
 	//Create Master File
 	timeNow = time(0);
 	systime = ctime(&timeNow);
+
+	struct tm* now = localtime(&timeNow);
+
+	char fileTimeBuffer[80];
+	strftime(fileTimeBuffer, 80, "%Y-%m-%d-%H-%M-%S/", now);
+
+	std::stringstream ss;
+	ss << fileTimeBuffer;
+	MDir = MDir + ss.str();
+	file = MDir + "Page" + to_string(fileIncrementer) + ".txt";
+
+	system(("mkdir -p " + MDir).c_str()); //casts string to c string on all entries within parentesis
+
+
 	data_.open(MFile);
 
 	//system("sudo rmmod rtc_ds1307");
@@ -91,30 +106,33 @@ int Startup() {
 
 
 
-void DataHandler(short values[arraySize][elementSize]) { //simulates writing to the SD card
+void DataHandler(short values[arraySize][elementSize], string times[arraySize]) { //simulates writing to the SD card
 
 	ofstream myfile;
 	
 	myfile.open(file, ios::out | ios::app);
 	
-	if (timeCounter++ >= timeChange) {
-		timeNow = time(0);
-		systime = ctime(&timeNow);
-		timeCounter = 0;
-	}
+	//if (timeCounter++ >= timeChange) {
+		/*timeNow = time(NULL);
+		systime = ctime(&timeNow);*/
+		//timeCounter = 0;
+	//}
 
 	for (int i = 0; i < arraySize; i++) {
 		myfile << values[i][0] << semi << values[i][1] << semi << values[i][2] << semi << values[i][3] << semi
-			<< values[i][0] << semi << values[i][1] << semi << values[i][2] << semi << values[i][3] << semi
 			<< values[i][4] << semi << values[i][5] << semi << values[i][6] << semi << values[i][7] << semi
-			<< values[i][8] << semi << values[i][9] << semi << values[i][10] << systime;
+			<< values[i][8] << semi << values[i][9] << semi << values[i][10] << semi 
+			<< values[i][11] << semi << values[i][12] << semi << times[i] << semi << newline;
 	}
+
+	timeNow = time(NULL);
+	systime = ctime(&timeNow);	
 
 	myfile.flush();
 	myfile.close();
 }
 
-void Telemetry(short values[arraySize][elementSize]) {
+void Telemetry(short values[arraySize][elementSize], string times[arraySize]) {
 	//char x[arraySize][(elementSize * 2)];
 	//memcpy(&values, x, sizeof(short)); //convert to char array
 
@@ -123,11 +141,23 @@ void Telemetry(short values[arraySize][elementSize]) {
 		for (int j = 0; j < elementSize; j++) {
 			s += to_string(values[i][j]) + semi;
 		}
+		s += times[i]+ semi;
 		s += newline;
 	}
 	for (int i = 0; i < arraySize; i++) {
 		serialPrintf(UART, s.c_str());
 	}
+}
+
+string GetTime() {
+	time_t rawtime;
+	struct tm* timeStruct;
+	char fileTimeBuffer[80];
+
+	time(&rawtime);
+	timeStruct = localtime(&rawtime);
+	strftime(fileTimeBuffer, 80, "%X", timeStruct);
+	return fileTimeBuffer;
 }
 
 int main()
@@ -148,18 +178,20 @@ int main()
 		thread t;
 		thread t_uArt;
 		short values[arraySize][elementSize];
-
-
+		string times[arraySize];
+		
 		cout << "starting loop" << endl;
 		while (true) {
 			try {
+				
 				for (int i = 0; i < arraySize; i++) {
-					
 					for (int pin = 0; pin < ADC_Pins; pin++)
 					{
 						values[i][pin] = ADC.readADCChannel(pin);// / (double)4095 * ADC.vref;
 					}		
-					Gyro.burstRead(values[i], ADC_Pins);					
+					Gyro.burstRead(values[i], ADC_Pins);	
+
+					times[i] = GetTime();
 				}
 
 				if (t.joinable()) {
@@ -169,12 +201,12 @@ int main()
 				if (fileLineCount >= fileLines) { // do this after the join due to fileIncrementer being global
 					fileLineCount = 0;
 					fileIncrementer++;
-					file = MDir + "Test" + to_string(fileIncrementer) + ".txt";
+					file = MDir + "Page" + to_string(fileIncrementer) + ".txt";
 				}
-				t = thread(DataHandler, values);
+				t = thread(DataHandler, values, times);
 
 				if (!t_uArt.joinable()) {// UART is very slow. just let it finish on its own time.
-					t_uArt = thread(Telemetry, values);
+					t_uArt = thread(Telemetry, values, times);
 				}
 				fileLineCount += arraySize;
 			}
