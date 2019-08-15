@@ -1,17 +1,11 @@
 /*
 ADIS16460.h
-Library for BRCTC Space Team's Gyroscope.
+Library for BRCTC Vibe's Gyroscope.
 Walter Willis -- Lead Programmer
 
-This code was created for an Arduino system taking part in the 2016 RockSat program.
-It has been adapted for us in the 2017 RockSat Program for the Raspberry Pi
-
 In this file are some command definitions and the class for the gyroscope.
-
-RESOURCES:
-Steven Hard shared an example file with me called IMU.ino. Most of the commands and logic of this class file were borrowed from this code.
-
-Arduino version 1.6.9
+There also exists some deprecated code that was used in an older version of this code 
+that was used in a previous project for an older version of the gyroscope, the ADIS 16365
 
 This code is free to use. Distributed as-is; no warranty is given.
 
@@ -83,28 +77,29 @@ class ADIS16460
 		int _RST = 3; // Sync/reset pin - not currently used
 	
 	public:
+		//No longer used as it was inconsistent. It is, however, kinda cool.
 
-		struct ByteCombiner
-		{
-			ByteCombiner(int8_t _a, int8_t _b) {
-				a = _a;
-				b = _b;
-			}
-			union
-			{
-				uint16_t word;
+		//struct ByteCombiner
+		//{
+		//	ByteCombiner(int8_t _a, int8_t _b) {
+		//		a = _a;
+		//		b = _b;
+		//	}
+		//	union
+		//	{
+		//		uint16_t word;
 
-				struct
-				{
-					// The order of these bytes matters
-					int8_t a;
-					int8_t b;
-				};
-			};
-		};
+		//		struct
+		//		{
+		//			// The order of these bytes matters
+		//			int8_t a;
+		//			int8_t b;
+		//		};
+		//	};
+		//};
+
 		//int Diagnostic, GyroX, GyroY, GyroZ, AccelX, AccelY, AccelZ, Temp, SampleCounter, Checksum; // Perform GetADISReadings function, and then read from the  data.
 		//CHECKSUM is the sum off all the preceeding values in unsigned 8 bit number format.		
-		const string fileName = "ADIS16460.txt";
 
 		ADIS16460();	
 		ADIS16460(int channel, int speed, int mode, int RST);	

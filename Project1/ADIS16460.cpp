@@ -1,46 +1,13 @@
-/*
-ADIS16460.cpp
-Library for BRCTC Space Team's Gyroscope.
-Walter Willis -- Lead Programmer
-
-Slightly modified from publicly available library
-
-NOTES: using WiringPi delayMicroseconds() with less than 100 microseconds can cause hangs when using multiple threads
-
-*/
-//DISCLAIMER
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  September 2016
-//  Author: Juan Jose Chong <juan.chong@analog.com>
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  ADIS16460.cpp
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// 
-//  This library provides all the functions necessary to interface the ADIS16460 IMU with a 
-//  PJRC 32-Bit Teensy 3.2 Development Board. Functions for SPI configuration, reads and writes,
-//  and scaling are included. This library may be used for the entire ADIS1646X family of devices 
-//  with some modification.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ADIS16460.cpp
+// Library for BRCTC Vibe's Gyroscope.
+// Walter Willis -- Lead Programmer
 //
-//  Permission is hereby granted, free of charge, to any person obtaining
-//  a copy of this software and associated documentation files (the
-//  "Software"), to deal in the Software without restriction, including
-//  without limitation the rights to use, copy, modify, merge, publish,
-//  distribute, sublicense, and/or sell copies of the Software, and to
-//  permit persons to whom the Software is furnished to do so, subject to
-//  the following conditions:
+// Slightly modified from publicly available library for use on the Raspberry Pi. 
 //
-//  The above copyright notice and this permission notice shall be
-//  included in all copies or substantial portions of the Software.
-//
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-//  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-//  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-//  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-//  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-//  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-//  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////////
+// NOTES: using WiringPi delayMicroseconds() with less than 100 microseconds can cause hangs when using multiple threads
+// Helpful library: https://github.com/juchong/ADIS16460-Arduino-Teensy/blob/master/ADIS16460/examples/ADIS16460_Teensy_Example/ADIS16460_Teensy_Example.ino
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 //#include "wiringPi.h"
@@ -53,12 +20,12 @@ NOTES: using WiringPi delayMicroseconds() with less than 100 microseconds can ca
 
 ADIS16460::ADIS16460()
 {
-	(wiringPiSPISetupMode (_channel, _speed, _mode) < 0);
+	wiringPiSPISetupMode (_channel, _speed, _mode);
 }
 
 ADIS16460::ADIS16460(int channel, int speed, int mode, int rst)
 {
-	(wiringPiSPISetupMode(channel, speed, mode) < 0);
+	wiringPiSPISetupMode(channel, speed, mode);
 	_channel = channel;
 	_speed = speed;
 	_mode = mode;

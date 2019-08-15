@@ -1,5 +1,8 @@
 // PiGenProjectCode.cpp : Defines the entry point for the console application.
-//
+/*
+Project code for the Blue Ridge Community and Technical College's Space Flight Design Challenge project BRCTC Vibe for the 2018-2019 semesters
+Some code logic was inspired by or inferred from other sources. 
+*/
 
 #include "stdafx.h"
 #include <stdlib.h> //Library for system functions
@@ -53,17 +56,17 @@ int Startup() {
 	MDir = MDir + ss.str();
 	file = MDir + "Page" + to_string(fileIncrementer) + ".txt";
 
-	system(("mkdir -p " + MDir).c_str()); //casts string to c string on all entries within parentesis
-
-
-	data_.open(MFile);
+	//Make the new data directory
+	system(("mkdir -p " + MDir).c_str()); //System command expects a constant string. .c_str() casts strings to c style const string on all entries within the parenthesis
+	
+	data_.open(MFile, ios::out | ios::app);
 
 	//system("sudo rmmod rtc_ds1307");
 	try {
 		system("sudo modprobe rtc_ds1307"); // we should be able to use the system time to call the rtc
 	}
 	catch (exception e) {
-		cout << e.what();
+		cout << e.what(); // if the rtc fails here, we will see an error during testing. It's likely the device is already mounted.
 	}
 	if (data_.is_open()) {
 		data_ << "Master Data File Created..." << systime << endl;
@@ -84,8 +87,9 @@ int Startup() {
 		data_ << "\tWiring Pi Setup Complete..." << systime << endl;
 
 
-		///interestingly, file descriptor as 0 is cout.
-		///so, forgetting to set UART defaults to cout
+		/// interestingly, file descriptor as 0 is cout.
+		/// so, forgetting to set UART defaults to cout.
+		/// the variable "UART" holds the file descriptor ID
 		timeNow = time(0);
 		systime = ctime(&timeNow);
 		data_ << "\tUART Setup Started..." << systime << endl;
@@ -105,39 +109,36 @@ int Startup() {
 }
 
 
-
+/*
+Function that is run on a separate thread. Saves to IO while the main thread cycles through more data.
+*/
 void DataHandler(double values[arraySize][elementSize], string times[arraySize]) { //simulates writing to the SD card
 
 	ofstream myfile;
 	
 	myfile.open(file, ios::out | ios::app);
-	
-	//if (timeCounter++ >= timeChange) {
-		/*timeNow = time(NULL);
-		systime = ctime(&timeNow);*/
-		//timeCounter = 0;
-	//}
 
+	//Defining the data to write statically is faster than a nested loop
 	for (int i = 0; i < arraySize; i++) {
+		//The first three sub-elements are ADC values
+		//Values of sub-element of index value 3 and above are Gyro values, followed by the timestamp.
+
 		myfile << values[i][0] << semi << values[i][1] << semi << values[i][2] << semi << values[i][3] << semi
 			<< values[i][4] << semi << values[i][5] << semi << values[i][6] << semi << values[i][7] << semi
 			<< values[i][8] << semi << values[i][9] << semi << values[i][10] << semi 
 			<< values[i][11] << semi << values[i][12] << semi << times[i] << semi << newline;
 	}
 
-	timeNow = time(NULL);
-	systime = ctime(&timeNow);	
-
 	myfile.flush();
 	myfile.close();
 }
 
+/*
+Function that is run on another thread parallel 
+*/
 void Telemetry(double values[arraySize][elementSize], string times[arraySize]) {
-	//char x[arraySize][(elementSize * 2)];
-	//memcpy(&values, x, sizeof(short)); //convert to char array
-
 	string s = "";
-	for (int i = 0; i < arraySize; i++) {
+	for (int i = 0; i < arraySize; i++) { // cycles through each element and stringifys the data. Seperates by semicolon.
 		for (int j = 0; j < elementSize; j++) {
 			s += to_string(values[i][j]) + semi;
 		}
@@ -145,10 +146,11 @@ void Telemetry(double values[arraySize][elementSize], string times[arraySize]) {
 		s += newline;
 	}
 	for (int i = 0; i < arraySize; i++) {
-		serialPrintf(UART, s.c_str());
+		serialPrintf(UART, s.c_str()); // Send data
 	}
 }
 
+//Gets a timestamp
 string GetTime() {
 	time_t rawtime;
 	struct tm* timeStruct;
@@ -210,7 +212,7 @@ int main()
 				}
 				fileLineCount += arraySize;
 			}
-			catch (const exception& e) {
+			catch (const exception& e) {// log any errors and then continue the loop
 				ofstream log;
 				timeNow = time(0);
 				systime = ctime(&timeNow);
@@ -222,7 +224,7 @@ int main()
 			}
 		}
 	}
-	catch (const exception& e) {
+	catch (const exception& e) { //This shouldn't be hit, but we'll know if it does.
 		ofstream log;
 		timeNow = time(0);
 		systime = ctime(&timeNow);

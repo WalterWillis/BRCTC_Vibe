@@ -27,5 +27,3 @@
 #include <wiringPiI2C.h>
 #include <unistd.h> 
 #include <forward_list>
-
-// TODO: reference additional headers your program requires here
