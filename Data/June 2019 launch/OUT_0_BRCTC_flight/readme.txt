@@ -1,0 +1,1 @@
+This data indicates a telemetry failure.

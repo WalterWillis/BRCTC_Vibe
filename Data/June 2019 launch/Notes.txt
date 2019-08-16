@@ -1,0 +1,4 @@
+Started writing at 5:41:40 AM
+Stopped writing at  5:50:05 AM
+
+3,977,462 samples at around 8,035 SPS in 495 seconds.
