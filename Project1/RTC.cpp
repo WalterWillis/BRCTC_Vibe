@@ -1,3 +1,7 @@
+/*
+	Based on code writen by rodan @ https://github.com/rodan/ds3231
+*/
+
 #include "RTC.h"
 #include "stdafx.h"
 
