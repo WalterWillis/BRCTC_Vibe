@@ -8,34 +8,37 @@ Some code logic was inspired by or inferred from other sources.
 #include <stdlib.h> //Library for system functions
 #include "PiGenProjectCode.h"
 #include <sstream>
+#include <atomic>
 
 
 using namespace std;
 
 //// Globals
 
-//const string newline = "\n";
-
-// Numerical
-static int fileIncrementer = 0;
-const int elementSize = 13;
-//The SD card should be writing in 4KB chunks. Divide that into the expected amount of data to get the array size required for optimal 4 KB writes.
-const int arraySize = 4096 / (elementSize * 2 + 24); //45;// (5100 dps);//290 (4500 dps);
-long timeCounter = 0;
-const long timeChange = arraySize * 20; //get the time less often. uses RTC less, thus less latency
-
 // Time
 time_t timeNow = time(0);
 char* systime = ctime(&timeNow);
 int UART;
 
+// Atomic Bool (thread safe)
+atomic<bool> done(false);
 
 // Strings
 static string MDir = "/home/pi/Desktop/Vibe2019Cpp/";
-string file = MDir + "Test " + to_string(fileIncrementer) + ".txt";
 string MFile = MDir + "Master_Program_Data.txt";
 const char semi = ';';
 const string newline = "\n";
+
+// Numerical
+static int fileIncrementer = 0;
+const int elementSize = 13;
+const int sectorSize = 512;
+// The SD card should be writing in 512 byte chunks. Divide that into the expected amount of data to get the array size required for optimal writes.
+const int arraySize = sectorSize / ((sizeof(double) * elementSize) + (elementSize * 8) + (16));  
+// Sector size divided by the byte amount of the array, each semi colon between them and the 2 bytes worth of newline characters at the end.
+
+// FileName 
+string file = MDir + "Test " + to_string(fileIncrementer) + ".txt";
 
 
 int Startup() {
@@ -148,6 +151,9 @@ void Telemetry(double values[arraySize][elementSize], string times[arraySize]) {
 	for (int i = 0; i < arraySize; i++) {
 		serialPrintf(UART, s.c_str()); // Send data
 	}
+
+	//We aren't waiting for the thread to join, so we need another way to asynchronously indicate that the thread is ready
+	done = true;
 }
 
 //Gets a timestamp
@@ -207,8 +213,10 @@ int main()
 				}
 				t = thread(DataHandler, values, times);
 
-				if (!t_uArt.joinable()) {// UART is very slow. just let it finish on its own time.
-					t_uArt = thread(Telemetry, values, times);
+				if (done) {// UART is very slow. just let it finish on its own time.
+					t_uArt.join();
+					done = false;
+					t_uArt = thread(Telemetry, values, times);					
 				}
 				fileLineCount += arraySize;
 			}
